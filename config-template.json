@@ -1,11 +1,10 @@
 {
-  "dify_api_base": "https://ai.fosunwealth.com/v1",
-  "dify_api_key": "app-ZUt9R6aDDR5cHVPbhlkTf0Sl",
-  "dify_app_type": "workflow",
-  "channel_type": "wx",
-  "model": "dify",
+  "channel_type": "wework",
+  "model": "webhook",
+  "msg_webhook_url": "http://your-service/api/callback",
+  "msg_webhook_timeout": 60,
   "single_chat_prefix": [""],
   "single_chat_reply_prefix": "",
-  "group_chat_prefix": ["@bot"],
+  "group_chat_prefix": [""],
   "group_name_white_list": ["ALL_GROUP"]
 }

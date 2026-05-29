@@ -1,8 +1,0 @@
-{
-  "jina_reader_base": "https://r.jina.ai",
-  "open_ai_api_base": "https://api.openai.com/v1",
-  "open_ai_api_key":  "sk-xxx",
-  "open_ai_model": "gpt-3.5-turbo",
-  "max_words": 8000,
-  "prompt": "我需要对下面的文本进行总结，总结输出包括以下三个部分：\n📖 一句话总结\n🔑 关键要点,用数字序号列出3-5个文章的核心内容\n🏷 标签: #xx #xx\n请使用emoji让你的表达更生动。"
-}
