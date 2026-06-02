@@ -40,9 +40,16 @@ class WebhookBot(Bot):
         "image_url": "https://example.com/cover.png"
     }
     或使用 link_card 对象：
-  {
+    {
         "reply_type": "link_card",
         "link_card": {"title": "...", "desc": "...", "url": "...", "image_url": "..."}
+    }
+
+    4) 文本 + 多张图片（先发文字，再按顺序发图）
+    {
+        "reply_type": "text",
+        "reply": "说明文字",
+        "image_urls": ["https://example.com/1.png", "https://example.com/2.png"]
     }
     """
 
@@ -97,6 +104,12 @@ class WebhookBot(Bot):
             return Reply(ReplyType.TEXT, str(data))
 
         reply_type = (data.get("reply_type") or data.get("type") or "").lower().strip()
+        image_urls = self._collect_image_urls(data)
+
+        # 文本 + 多图：先发文字，再发图片
+        if image_urls and reply_type in ("", "text", "txt"):
+            reply_text = data.get("reply") or data.get("content") or data.get("message")
+            return self._build_multi_reply(reply_text, image_urls)
 
         # 链接/图文卡片
         if reply_type in ("link_card", "link", "card", "sharing"):
@@ -136,8 +149,40 @@ class WebhookBot(Bot):
         if data.get("image_url") and not data.get("reply") and not data.get("content"):
             return Reply(ReplyType.IMAGE_URL, data["image_url"])
 
+        # 仅多图、无文字
+        if image_urls:
+            return self._build_multi_reply(None, image_urls)
+
         # 默认文本
         reply_text = data.get("reply") or data.get("content") or data.get("message")
         if reply_text is None:
             reply_text = str(data)
         return Reply(ReplyType.TEXT, reply_text)
+
+    @staticmethod
+    def _collect_image_urls(data: dict) -> list:
+        urls = []
+        raw = data.get("image_urls")
+        if isinstance(raw, list):
+            urls.extend(u for u in raw if u)
+        elif isinstance(raw, str) and raw:
+            urls.append(raw)
+        single = data.get("image_url")
+        if single and single not in urls:
+            urls.append(single)
+        return urls
+
+    def _build_multi_reply(self, text, image_urls: list) -> Reply:
+        max_images = conf().get("max_media_send_count", 3)
+        replies = []
+        if text:
+            replies.append(Reply(ReplyType.TEXT, text))
+        for url in image_urls[:max_images]:
+            replies.append(Reply(ReplyType.IMAGE_URL, url))
+        if not replies:
+            raise ValueError("image_urls 为空且无文本内容")
+        if len(replies) == 1:
+            return replies[0]
+        if len(image_urls) > max_images:
+            logger.warning(f"[Webhook] image_urls 超过 max_media_send_count={max_images}，已截断")
+        return Reply(ReplyType.MULTI, replies)

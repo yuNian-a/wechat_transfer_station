@@ -107,6 +107,21 @@ python app.py
 也支持 `reply_type` 为 `link`，或只返回 `url`（可选 `title`、`desc`、`image_url`）。  
 文本字段仍兼容 `content` / `message`。
 
+**文本 + 多张图片**（先发文字，再按 `image_urls` 顺序发图）
+
+```json
+{
+  "reply_type": "text",
+  "reply": "您好，关于 WebPortal 充值流程...",
+  "image_urls": [
+    "https://example.com/page9_blk0.png",
+    "https://example.com/page9_blk1.png"
+  ]
+}
+```
+
+`image_urls` 最多发送 `max_media_send_count` 张（默认 3），每条间隔 `media_send_interval` 秒（默认 1）。也可只传 `image_urls` 不发文字。
+
 ---
 
 ## 插件

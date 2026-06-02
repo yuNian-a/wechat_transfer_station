@@ -18,6 +18,7 @@ class ReplyType(Enum):
     VIDEO = 12
     MINIAPP = 13  # 小程序
     LINK_CARD = 14  # 链接/图文卡片（企微 ntwork）
+    MULTI = 15  # 多条消息，content 为 Reply 列表（先发文字再发图等）
 
     def __str__(self):
         return self.name

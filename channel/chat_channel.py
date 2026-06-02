@@ -260,6 +260,10 @@ class ChatChannel(Channel):
                     reply.content = reply_text
                 elif reply.type == ReplyType.ERROR or reply.type == ReplyType.INFO:
                     reply.content = "[" + str(reply.type) + "]\n" + reply.content
+                elif reply.type == ReplyType.MULTI:
+                    reply.content = [
+                        self._decorate_reply(context, sub) for sub in reply.content if sub and sub.type
+                    ]
                 elif reply.type == ReplyType.IMAGE_URL or reply.type == ReplyType.VOICE or reply.type == ReplyType.IMAGE or reply.type == ReplyType.FILE or reply.type == ReplyType.VIDEO or reply.type == ReplyType.VIDEO_URL or reply.type == ReplyType.LINK_CARD:
                     pass
                 else:
@@ -280,7 +284,16 @@ class ChatChannel(Channel):
             reply = e_context["reply"]
             if not e_context.is_pass() and reply and reply.type:
                 logger.debug("[WX] ready to send reply: {}, context: {}".format(reply, context))
-                self._send(reply, context)
+                if reply.type == ReplyType.MULTI:
+                    interval = conf().get("media_send_interval", 1)
+                    for i, sub in enumerate(reply.content or []):
+                        if not sub or not sub.type:
+                            continue
+                        if i > 0:
+                            time.sleep(interval)
+                        self._send(sub, context)
+                else:
+                    self._send(reply, context)
 
     def _send(self, reply: Reply, context: Context, retry_cnt=0):
         try:
