@@ -73,6 +73,8 @@ available_setting = {
 
     # 企业微信个人号(wework)配置
     "wework_smart": True,
+    # 是否忽略企业微信内部用户的消息（通过 appinfo 字段判断：纯数字=个人微信，含字母=企微内部）
+    "wework_ignore_internal_users": True,
 
     # 微信公众号配置
     "wechatmp_token": "",

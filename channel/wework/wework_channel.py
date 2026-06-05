@@ -265,12 +265,22 @@ class WeworkChannel(ChatChannel):
         if self_id and cmsg.actual_user_id == self_id:
             logger.debug("[WX]skip self message in group")
             return
-        logger.info("[WX][群消息] msgId={} 群ID={} 群名={} 发送人ID={} 发送人昵称={} 内容={}".format(
+        # 从原始消息中读取 appinfo，判断发送者类型：
+        # 企业微信内部用户 appinfo 为 base64 字符串（含字母）
+        # 个人微信外部用户 appinfo 为纯数字字符串
+        appinfo = cmsg._rawmsg.get('data', {}).get('appinfo', '')
+        is_internal_user = bool(appinfo) and not appinfo.isdigit()
+        user_type = "企业微信内部用户" if is_internal_user else "个人微信用户"
+        logger.info("[WX][群消息] msgId={} 群ID={} 群名={} 发送人ID={} 发送人昵称={} 用户类型={} appinfo={} 内容={}".format(
             cmsg.msg_id,
             cmsg.other_user_id, cmsg.other_user_nickname,
             cmsg.actual_user_id, cmsg.actual_user_nickname,
+            user_type, appinfo,
             cmsg.content
         ))
+        if is_internal_user and conf().get("wework_ignore_internal_users", False):
+            logger.info("[WX][群消息] 发送人={} 为企业微信内部用户，跳过不回复".format(cmsg.actual_user_nickname))
+            return
         if cmsg.ctype == ContextType.VOICE:
             if not conf().get("speech_recognition"):
                 return
